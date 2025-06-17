@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestión de Datos (Excel)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="fondo min-h-screen flex items-center justify-center">
+  <div class="bg-gray-100 rounded-lg shadow-lg p-8 w-full max-w-3xl">
+    <h2 class="text-center text-xl font-bold mb-6">Gestión de Datos (Excel)</h2>
+
+    <div class="mb-4">
+      <label class="block text-sm mb-1">Cargar archivo Excel (datos_YYYY-MM-DD.xlsx):</label>
+      <input id="fileInput" type="file" accept=".xlsx,.xls" class="block w-full text-sm text-gray-600 border border-gray-300 rounded-md p-2 bg-white" />
+    </div>
+
+    <div class="mb-4">
+      <input id="nombreInput" type="text" placeholder="Nombre" class="w-full mb-2 p-2 rounded-md border border-gray-300" />
+      <input id="edadInput" type="number" placeholder="Edad" class="w-full p-2 rounded-md border border-gray-300" />
+    </div>
+
+    <button id="guardarBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded mb-6">Guardar</button>
+
+    <table class="w-full text-left border-collapse">
+      <thead class="bg-gray-200">
+        <tr>
+          <th class="py-2 px-4 border">ID</th>
+          <th class="py-2 px-4 border">Nombre</th>
+          <th class="py-2 px-4 border">Edad</th>
+          <th class="py-2 px-4 border">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tablaDatos">
+        <!-- Filas dinámicas -->
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    let idCounter = 1;
+
+    document.getElementById('guardarBtn').addEventListener('click', () => {
+      const nombre = document.getElementById('nombreInput').value.trim();
+      const edad = document.getElementById('edadInput').value.trim();
+      const tabla = document.getElementById('tablaDatos');
+
+      if (!nombre || !edad) {
+        alert("Por favor completa ambos campos.");
+        return;
+      }
+
+      const fila = document.createElement('tr');
+      fila.innerHTML = `
+        <td class="border px-4 py-2">${idCounter++}</td>
+        <td class="border px-4 py-2">${nombre}</td>
+        <td class="border px-4 py-2">${edad}</td>
+        <td class="border px-4 py-2">
+          <button class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded eliminar-btn">Eliminar</button>
+        </td>
+      `;
+
+      tabla.appendChild(fila);
+
+      // Limpiar inputs
+      document.getElementById('nombreInput').value = '';
+      document.getElementById('edadInput').value = '';
+    });
+
+    document.getElementById('tablaDatos').addEventListener('click', (e) => {
+      if (e.target.classList.contains('eliminar-btn')) {
+        e.target.closest('tr').remove();
+      }
+    });
+
+    // (Opcional) Lector de archivos Excel con SheetJS (si lo necesitas después):
+    
+    document.getElementById('fileInput').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+        jsonData.forEach((row, index) => {
+          const fila = document.createElement('tr');
+          fila.innerHTML = `
+            <td class="border px-4 py-2">${idCounter++}</td>
+            <td class="border px-4 py-2">${row.Nombre}</td>
+            <td class="border px-4 py-2">${row.Edad}</td>
+            <td class="border px-4 py-2">
+              <button class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded eliminar-btn">Eliminar</button>
+            </td>
+          `;
+          document.getElementById('tablaDatos').appendChild(fila);
+        });
+      };
+      reader.readAsArrayBuffer(file);
+    });
+    
+  </script>
+</body>
+</html>
